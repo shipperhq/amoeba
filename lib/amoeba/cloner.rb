@@ -18,13 +18,21 @@ module Amoeba
       @options    = options
       @object_klass = @old_object.class
       inherit_parent_settings
-      @new_object = object.__send__(amoeba.dup_method)
-      
-      if !amoeba.cacheables.nil?
-        amoeba.cacheables.each do |is_cacheable|
-          if is_cacheable.call(@new_object)
-            Amoeba::AssociationCache.cache(@new_object)
-            break
+
+      skip_clone = amoeba.skip_clone_method.call(object) unless amoeba.skip_clone_method.nil?
+
+      if skip_clone
+        # don't clone it
+        @new_object = object
+      else
+        @new_object = object.__send__(amoeba.dup_method)
+
+        if !amoeba.cacheables.nil?
+          amoeba.cacheables.each do |is_cacheable|
+            if is_cacheable.call(@new_object)
+              Amoeba::AssociationCache.cache(@new_object)
+              break
+            end
           end
         end
       end
@@ -92,7 +100,7 @@ module Amoeba
       # table from copying so we don't end up with the new
       # and old children on the copy
       return unless association.macro == :has_many ||
-                    association.is_a?(::ActiveRecord::Reflection::ThroughReflection)
+          association.is_a?(::ActiveRecord::Reflection::ThroughReflection)
       amoeba.exclude_association(association.options[:through])
     end
 

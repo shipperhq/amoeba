@@ -1,26 +1,27 @@
 module Amoeba
   class Config
     DEFAULTS = {
-      enabled:        false,
-      inherit:        false,
-      do_preproc:     false,
-      parenting:      false,
-      raised:         false,
-      dup_method:     :dup,
-      remap_method:   nil,
-      includes:       {},
-      excludes:       {},
-      clones:         [],
-      reuse_values:   [],
-      customizations: [],
-      overrides:      [],
-      null_fields:    [],
-      coercions:      {},
-      prefixes:       {},
-      suffixes:       {},
-      regexes:        {},
-      known_macros:   [:has_one, :has_many, :has_and_belongs_to_many],
-      cacheables:     [],
+        enabled:        false,
+        inherit:        false,
+        do_preproc:     false,
+        parenting:      false,
+        raised:         false,
+        dup_method:     :dup,
+        remap_method:   nil,
+        includes:       {},
+        excludes:       {},
+        clones:         [],
+        reuse_values:   [],
+        customizations: [],
+        overrides:      [],
+        null_fields:    [],
+        coercions:      {},
+        prefixes:       {},
+        suffixes:       {},
+        regexes:        {},
+        known_macros:   [:has_one, :has_many, :has_and_belongs_to_many],
+        cacheables:     [],
+        skip_clone_method:  nil,
     }
 
     # ActiveRecord 3.x have different implementation of deep_dup
@@ -63,7 +64,10 @@ module Amoeba
 
     def cacheable(value=nil)
       push_value_to_array(value, :cacheables)
+    end
 
+    def skip_clone(value=nil)
+      @config[:skip_clone_method] = value
     end
 
     def disable
