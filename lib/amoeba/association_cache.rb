@@ -46,6 +46,7 @@ module Amoeba
     private
 
     def self.get_key(new_object)
+      return new_object.amoeba_cache_key if new_object.respond_to?(:amoeba_cache_key)
       return new_object.name if new_object.respond_to?(:name)
       return Digest::MD5.hexdigest(new_object.attributes.reject{|x| x == 'id'}.values.join(','))
     end
