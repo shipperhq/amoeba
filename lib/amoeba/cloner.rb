@@ -25,29 +25,45 @@ module Amoeba
         # don't clone it
         @new_object = object
       else
-        @new_object = object.__send__(amoeba.dup_method)
-
+        # determine if we need to cache it
+        is_cacheable = false
         if !amoeba.cacheables.nil?
-          amoeba.cacheables.each do |is_cacheable|
-            if is_cacheable.call(@new_object)
-              Amoeba::AssociationCache.cache(@new_object)
+          amoeba.cacheables.each do |is_cacheable_mth|
+            if is_cacheable_mth.call(object)
+              is_cacheable = true
               break
             end
           end
+        end
+
+        if is_cacheable
+          cached = Amoeba::AssociationCache.get(object)
+          if cached.nil?
+            @new_object = object.__send__(amoeba.dup_method)
+            Amoeba::AssociationCache.cache(@new_object)
+          else
+            @new_object = cached
+          end
+        else
+          @new_object = object.__send__(amoeba.dup_method)
         end
       end
     end
 
     def self.running?
-      @@isRunning
+      if RequestStore.store.has_key?(:amoeba_running)
+        RequestStore.store[:amoeba_running]
+      else
+        false
+      end
     end
 
     def self.finish
-      @@isRunning = false
+      RequestStore.store[:amoeba_running] = false
     end
 
     def run
-      @@isRunning = true
+      RequestStore.store[:amoeba_running] = true
 
       process_overrides
       apply if amoeba.enabled
